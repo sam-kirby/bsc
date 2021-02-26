@@ -10,10 +10,27 @@ import time
 from collections.abc import Callable
 from mpi4py import MPI
 from multiprocessing.pool import ThreadPool
+from numpy.typing import ArrayLike
 from pathlib import Path
 from scipy.optimize import differential_evolution
 
-def smilei_sim(par_vec: list[float], namelist: str, post_process: Callable[[str], float]) -> float:
+def smilei_sim(par_vec: ArrayLike, namelist: str, post_process: Callable[[str], float]) -> float:
+    """
+    Run a single Smilei simulation in another MPI process
+
+    Note the simulation is run in a temporary directory. Any results needed should be either be 
+    processed or copied in the post_process function
+
+    Arguments:
+    par_vec -- a parameter vector to pass to Smilei 
+        - will be stored as the variable x and can be accessed in the namelist
+    namelist -- path to the namelist
+    post_process -- a function to use to process the results, taking the work directory as an
+        argument
+    
+    Returns:
+    The result of post_process
+    """
     logger = logging.getLogger("supervisor")
 
     logger.debug(f"Starting Smilei simulation with parameters: {', '.join([str(x) for x in par_vec])}")
@@ -57,8 +74,11 @@ def smilei_sim(par_vec: list[float], namelist: str, post_process: Callable[[str]
 
     logger.debug("Written results to generation file")
 
-    # tidy up
-    shutil.rmtree(work_dir, onerror=lambda _func, path, excinfo: logger.warning(f"Failed to delete {path} as {excinfo}"))
+    # tidy up - log failure but do nothing about it now - failures probably due to latency on HPC ephemeral store
+    shutil.rmtree(
+        work_dir,
+        onerror=lambda _f, p, e: logger.warning(f"Failed to delete {p} as {e}")
+    )
 
     logger.debug("Attempted to remove temp dir")
 
@@ -66,6 +86,9 @@ def smilei_sim(par_vec: list[float], namelist: str, post_process: Callable[[str]
     return result
 
 def max_energy_negated(work_dir: str) -> float:
+    """
+    Find the highest energy bin and return its energy * -1
+    """
     logger = logging.getLogger("supervisor")
     sim_results = happi.Open(work_dir)
     logger.debug(f"simulation results opened in {work_dir}")
@@ -79,6 +102,10 @@ def max_energy_negated(work_dir: str) -> float:
     return -final_energy_spectrum._centers[0][last_occupied_energy_bin]
 
 def callback(xk, convergence, *args, **kwargs) -> bool:
+    """
+    A simple callback function that logs the best result of the generation
+    Also creates a new gen csv file
+    """
     logger = logging.getLogger("supervisor")
     gen_number = get_gen_number()
     logger.info(f"Generation {gen_number} complete; current best density profile is: {', '.join([str(x) for x in xk])}")
@@ -99,15 +126,17 @@ def get_gen_number() -> int:
         )
     )[-1]
 
-# setup logging
+# setup logging - split logs into two files
+#  - main.log: Generation change and results only
+#  - debug.log: Every smilei sim start + finish + everything in debug.log. Noisy.
 logger = logging.getLogger("supervisor")
 logger.setLevel(logging.DEBUG)
 fh = logging.FileHandler("main.log", mode='w')
-fh.setFormatter(logging.Formatter("%(levelname)s@%(asctime)s:%(message)s"))
+fh.setFormatter(logging.Formatter("%(levelname)s on %(thread)d at %(asctime)s: %(message)s"))
 fh.setLevel(logging.INFO)
 logger.addHandler(fh)
 fh = logging.FileHandler("debug.log", mode='w')
-fh.setFormatter(logging.Formatter("%(levelname)s@%(asctime)s:%(message)s"))
+fh.setFormatter(logging.Formatter("%(levelname)s on %(thread)d at %(asctime)s: %(message)s"))
 logger.addHandler(fh)
 
 # MPI Setup
@@ -131,12 +160,24 @@ max_iter = 100
 pop_size = 12  # MULTIPLIER! len(x) * pop_size = actual_pop_size
 workers = ThreadPool(processes=usize - 1).map
 
-# Create gen0 out file
+# Create gen 0 out file
 Path("gen000.csv").touch()  # Note that gen000 will be twice as large as all other gen files
                             # this is because it will contain the initial random population and the first generation
 
 # GE
 logger.info("Beginning optimisation")
-res = differential_evolution(smilei_sim, bounds, args=args, callback=callback, maxiter=max_iter, popsize=pop_size, workers=workers, updating='deferred', polish=False)
-logger.info(f"Optimizer terminated due to: {res.message}")
+
+res = differential_evolution(
+    smilei_sim,
+    bounds,
+    args=args,
+    callback=callback,
+    maxiter=max_iter,
+    popsize=pop_size,
+    workers=workers,
+    updating='deferred',
+    polish=False
+)
+
 logger.info(f"Optimal density profile is: [{', '.join([str(x) for x in res.x])}] with a peak energy of {res.fun} sim units")
+logger.info(f"Optimizer terminated due to: {res.message}")
