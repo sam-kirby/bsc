@@ -37,6 +37,8 @@ def smilei_sim(par_vec: list[float], namelist: str, post_process: Callable[[str]
         info=info
     )
 
+    logger.debug("Process spawned, waiting for completion")
+
     # wait for smilei to finish (yielding to other threads)
     req = inter.irecv(source=0, tag=0)
     while not req.Test():
@@ -53,8 +55,12 @@ def smilei_sim(par_vec: list[float], namelist: str, post_process: Callable[[str]
         xs = ','.join([str(x) for x in par_vec])
         print(xs, -result, sep=',', file=gen_file)
 
+    logger.debug("Written results to generation file")
+
     # tidy up
     shutil.rmtree(work_dir, onerror=lambda _func, path, excinfo: logger.warning(f"Failed to delete {path} as {excinfo}"))
+
+    logger.debug("Attempted to remove temp dir")
 
     # finally, return result
     return result
@@ -62,6 +68,7 @@ def smilei_sim(par_vec: list[float], namelist: str, post_process: Callable[[str]
 def max_energy_negated(work_dir: str) -> float:
     logger = logging.getLogger("supervisor")
     sim_results = happi.Open(work_dir)
+    logger.debug(f"simulation results opened in {work_dir}")
     final_energy_spectrum = sim_results.ParticleBinning(
         0,
         timesteps=sim_results.namelist.Main.number_of_timesteps
