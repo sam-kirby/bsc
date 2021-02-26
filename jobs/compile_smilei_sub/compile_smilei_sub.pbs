@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#PBS -lwalltime=02:00:00
+#PBS -lselect=1:ncpus=32:mem=8gb
+
+set -e
+
+module load gcc/10.2.0
+module load mpi
+module load hdf5/1.10.5-parallel
+module load anaconda3/personal
+
+# setup
+cd $HOME
+
+# setup anaconda
+[ ! -d anaconda3 ] && anaconda-setup # setup anaconda if not already done
+
+# setup folder structure
+mkdir -p .local/bin
+mkdir -p repos
+cd repos
+
+# clone or update
+if [ -d Smilei ]
+then
+  echo "pulling with rebase..."
+  cd Smilei
+  git pull --rebase
+else
+  echo "cloning..."
+  git clone --depth 1 https://github.com/SmileiPIC/Smilei.git
+  cd Smilei
+  git am $HOME/patches/Smilei/*.patch
+fi
+
+# build and install
+echo "building..."
+HDF5_ROOT_DIR=$HDF5_HOME PYTHONCONFIG=python3-config SMILEICXX="mpicxx -cxx=g++" make -j 32 machine=linux_x86_64_gnu
+mv smilei $HOME/.local/bin/smilei_sub
+
+# cleanup
+echo "cleanup..."
+make clean

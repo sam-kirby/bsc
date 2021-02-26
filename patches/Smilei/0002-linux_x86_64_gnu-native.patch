@@ -1,0 +1,22 @@
+From 0c9af0be58acdc2365705d5c2a5ab55eece0a6c8 Mon Sep 17 00:00:00 2001
+From: Samuel Kirby <sk5112@ic.ac.uk>
+Date: Fri, 26 Feb 2021 02:04:36 +0000
+Subject: [PATCH 2/3] linux_x86_64_gnu native
+
+---
+ scripts/compile_tools/machine/linux_x86_64_gnu | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/compile_tools/machine/linux_x86_64_gnu b/scripts/compile_tools/machine/linux_x86_64_gnu
+index 0de07db..9d3c340 100644
+--- a/scripts/compile_tools/machine/linux_x86_64_gnu
++++ b/scripts/compile_tools/machine/linux_x86_64_gnu
+@@ -1,4 +1,4 @@
+-CXXFLAGS += -mavx2 -mfma  -march=broadwell
++CXXFLAGS += -mavx2 -mfma  -march=native
+ # -march=native
+ # -mavx2
+ # -mfma
+-- 
+1.8.3.1
+

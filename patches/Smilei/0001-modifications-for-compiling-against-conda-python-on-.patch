@@ -1,0 +1,157 @@
+From c1d17886c38df7ccd2dabbc680ae9dfe4b4d502b Mon Sep 17 00:00:00 2001
+From: Samuel Kirby <sk5112@ic.ac.uk>
+Date: Fri, 26 Feb 2021 02:04:33 +0000
+Subject: [PATCH 1/3] modifications for compiling against conda python on EPYC
+ Rome
+
+---
+ makefile                                |  5 +-
+ scripts/compile_tools/machine/rome      |  6 +++
+ scripts/compile_tools/numpy-includes.py |  5 ++
+ scripts/compile_tools/python-config.py  | 83 ---------------------------------
+ 4 files changed, 14 insertions(+), 85 deletions(-)
+ create mode 100644 scripts/compile_tools/machine/rome
+ create mode 100644 scripts/compile_tools/numpy-includes.py
+ delete mode 100755 scripts/compile_tools/python-config.py
+
+diff --git a/makefile b/makefile
+index 760f83a..8a0ca9d 100755
+--- a/makefile
++++ b/makefile
+@@ -28,7 +28,7 @@ endef
+     endif
+ endif
+ 
+-PYTHONCONFIG := $(PYTHONEXE) scripts/compile_tools/python-config.py
++PYTHONCONFIG ?= python-config
+ 
+ #-----------------------------------------------------
+ # Git information
+@@ -77,8 +77,9 @@ CXXFLAGS += -I$(BUILD_DIR)/src/Python
+ PYSCRIPTS = $(shell find src/Python -name \*.py)
+ PYHEADERS := $(addprefix $(BUILD_DIR)/, $(PYSCRIPTS:.py=.pyh))
+ PY_CXXFLAGS := $(shell $(PYTHONCONFIG) --includes)
++PY_CXXFLAGS += $(shell $(PYTHONEXE) scripts/compile_tools/numpy-includes.py)
+ CXXFLAGS += $(PY_CXXFLAGS)
+-PY_LDFLAGS := $(shell $(PYTHONCONFIG) --ldflags)
++PY_LDFLAGS := $(shell $(PYTHONCONFIG) --ldflags --embed)
+ LDFLAGS += $(PY_LDFLAGS)
+ ifneq ($(strip $(PYTHONHOME)),)
+     LDFLAGS += -L$(PYTHONHOME)/lib
+diff --git a/scripts/compile_tools/machine/rome b/scripts/compile_tools/machine/rome
+new file mode 100644
+index 0000000..82f72fe
+--- /dev/null
++++ b/scripts/compile_tools/machine/rome
+@@ -0,0 +1,6 @@
++#
++# Machine file for AMD EPYC Rome processors
++# Compilation with the Intel compiler
++# __________________________________________________________
++
++CXXFLAGS +=  -march=core-avx2 -O3 -inline-factor=1000 -fno-alias
+\ No newline at end of file
+diff --git a/scripts/compile_tools/numpy-includes.py b/scripts/compile_tools/numpy-includes.py
+new file mode 100644
+index 0000000..90ab283
+--- /dev/null
++++ b/scripts/compile_tools/numpy-includes.py
+@@ -0,0 +1,5 @@
++try:
++    import numpy
++    print(' '.join(['-I' + numpy.get_include() + ' -DSMILEI_USE_NUMPY -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION']))
++except:
++    pass
+\ No newline at end of file
+diff --git a/scripts/compile_tools/python-config.py b/scripts/compile_tools/python-config.py
+deleted file mode 100755
+index 2fd2228..0000000
+--- a/scripts/compile_tools/python-config.py
++++ /dev/null
+@@ -1,83 +0,0 @@
+-import sys
+-import os
+-import getopt
+-try:
+-    from distutils import sysconfig
+-except:
+-    import sysconfig
+-
+-valid_opts = ['prefix', 'exec-prefix', 'includes', 'libs', 'cflags',
+-              'ldflags', 'help']
+-
+-def exit_with_usage(code=1):
+-    try:
+-        print("Usage: %s [%s]" % (sys.argv[0],
+-                                                '|'.join('--'+opt for opt in valid_opts)))
+-    except:
+-        print("Usage: {0} [{1}]".format(
+-            sys.argv[0], '|'.join('--'+opt for opt in valid_opts)))
+-    sys.exit(code)
+-
+-try:
+-    opts, args = getopt.getopt(sys.argv[1:], '', valid_opts)
+-except getopt.error:
+-    exit_with_usage()
+-
+-if not opts:
+-    exit_with_usage()
+-
+-pyver = sysconfig.get_config_var('VERSION')
+-getvar = sysconfig.get_config_var
+-
+-opt_flags = [flag for (flag, val) in opts]
+-
+-if '--help' in opt_flags:
+-    exit_with_usage(code=0)
+-
+-for opt in opt_flags:
+-    if opt == '--prefix':
+-        try:
+-            print(sysconfig.PREFIX)
+-        except:
+-            print(sysconfig.get_config_var('prefix'))
+-    
+-    elif opt == '--exec-prefix':
+-        try:
+-            print(sysconfig.EXEC_PREFIX)
+-        except:
+-            print(sysconfig.get_config_var('exec_prefix'))
+-    
+-    elif opt in ('--includes', '--cflags'):
+-        try:
+-            flags = ['-I' + sysconfig.get_python_inc(),
+-                     '-I' + sysconfig.get_python_inc(plat_specific=True)]
+-        except:
+-            flags = ['-I' + sysconfig.get_path('include'),
+-                     '-I' + sysconfig.get_path('platinclude')]
+-        
+-        try:
+-            import numpy
+-            flags += ['-I' + numpy.get_include() + ' -DSMILEI_USE_NUMPY -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION']
+-        except:
+-            pass
+-        
+-        if opt == '--cflags':
+-            flags.extend(getvar('CFLAGS').split())
+-        print(' '.join(flags))
+-
+-    elif opt in ('--libs', '--ldflags'):
+-        try:
+-            libs = ['-lpython' + pyver + sys.abiflags]
+-        except:
+-            libs = ['-lpython' + pyver]
+-        libs += getvar('LIBS').split()
+-        libs += getvar('SYSLIBS').split()
+-        # add the prefix/lib/pythonX.Y/config dir, but only if there is no
+-        # shared library in prefix/lib/.
+-        if opt == '--ldflags':
+-            if not getvar('Py_ENABLE_SHARED'):
+-                libs.insert(0, '-L' + getvar('LIBPL'))
+-            if not getvar('PYTHONFRAMEWORK'):
+-                libs.extend(getvar('LINKFORSHARED').split())
+-        print(' '.join(libs))
+-
+-- 
+1.8.3.1
+
