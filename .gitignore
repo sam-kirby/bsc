@@ -1,0 +1,11 @@
+/*
+
+!/.gitignore
+
+!/jobs
+!/namelists
+!/patches
+!/supervisors
+
+/jobs/**/out
+/**/.vscode
