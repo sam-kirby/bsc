@@ -22,16 +22,16 @@ mkdir -p repos
 cd repos
 
 # clone or update
-if [ -d Smilei ]
+if [ -d Smilei_sub ]
 then
   echo "pulling with rebase..."
-  cd Smilei
+  cd Smilei_sub
   git pull --rebase
 else
   echo "cloning..."
-  git clone --depth 1 https://github.com/SmileiPIC/Smilei.git
-  cd Smilei
-  git am $HOME/patches/Smilei/*.patch
+  git clone --depth 1 https://github.com/SmileiPIC/Smilei.git Smilei_sub
+  cd Smilei_sub
+  git am $HOME/patches/Smilei_sub/*.patch
 fi
 
 # build and install
