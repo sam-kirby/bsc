@@ -132,7 +132,8 @@ pop_size = 12  # MULTIPLIER! len(x) * pop_size = actual_pop_size
 workers = ThreadPool(processes=usize - 1).map
 
 # Create gen0 out file
-Path("gen000.csv").touch()
+Path("gen000.csv").touch()  # Note that gen000 will be twice as large as all other gen files
+                            # this is because it will contain the initial random population and the first generation
 
 # GE
 logger.info("Beginning optimisation")
