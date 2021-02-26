@@ -13,8 +13,14 @@ from multiprocessing.pool import ThreadPool
 from numpy.typing import ArrayLike
 from pathlib import Path
 from scipy.optimize import differential_evolution
+from threading import Lock
 
-def smilei_sim(par_vec: ArrayLike, namelist: str, post_process: Callable[[str], float]) -> float:
+def smilei_sim(
+        par_vec: ArrayLike,
+        namelist: str,
+        post_process: Callable[[str], float],
+        mpi_spawn_lock: Lock
+    ) -> float:
     """
     Run a single Smilei simulation in another MPI process
 
@@ -33,8 +39,6 @@ def smilei_sim(par_vec: ArrayLike, namelist: str, post_process: Callable[[str], 
     """
     logger = logging.getLogger("supervisor")
 
-    logger.debug(f"Starting Smilei simulation with parameters: {', '.join([str(x) for x in par_vec])}")
-
     # create temporary work directory - have to do it this way as directory can fail to delete on HPC...
     work_dir = tempfile.mkdtemp(dir=os.getcwd())
 
@@ -43,18 +47,21 @@ def smilei_sim(par_vec: ArrayLike, namelist: str, post_process: Callable[[str], 
     info.Set("wdir", work_dir)
 
     # spawn smilei child process
-    inter = MPI.COMM_SELF.Spawn(
-        command = "smilei_sub",
-        args=[
-            "from numpy import array",
-            "x = {}".format(par_vec.__repr__().replace("\n", "")),
-            namelist
-        ],
-        maxprocs=1,
-        info=info
-    )
+    with mpi_spawn_lock:
+        logger.debug(f"Starting Smilei simulation with parameters: {', '.join([str(x) for x in par_vec])}")
 
-    logger.debug("Process spawned, waiting for completion")
+        inter = MPI.COMM_SELF.Spawn(
+            command = "smilei_sub",
+            args=[
+                "from numpy import array",
+                "x = {}".format(par_vec.__repr__().replace("\n", "")),
+                namelist
+            ],
+            maxprocs=1,
+            info=info
+        )
+
+        logger.debug("Process spawned, waiting for completion")
 
     # wait for smilei to finish (yielding to other threads)
     req = inter.irecv(source=0, tag=0)
@@ -153,9 +160,11 @@ else:
     logger.error(f"Supervisor expected to be running at rank 0, but is actually rank {rank}")
     sys.exit(1)
 
+mpi_spawn_lock = Lock()
+
 # GE Params
 bounds = [(0., 3.) for _i in range(10)]
-args = [f"{os.environ['HOME']}/namelists/density_ml.py", max_energy_negated]
+args = [f"{os.environ['HOME']}/namelists/density_ml.py", max_energy_negated, mpi_spawn_lock]
 max_iter = 100
 pop_size = 12  # MULTIPLIER! len(x) * pop_size = actual_pop_size
 workers = ThreadPool(processes=usize - 1).map
