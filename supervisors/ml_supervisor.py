@@ -10,13 +10,12 @@ import time
 from collections.abc import Callable
 from mpi4py import MPI
 from multiprocessing.pool import ThreadPool
-from numpy.typing import ArrayLike
 from pathlib import Path
 from scipy.optimize import differential_evolution
 from threading import Lock
 
 def smilei_sim(
-        par_vec: ArrayLike,
+        par_vec: np.ndarray,
         namelist: str,
         post_process: Callable[[str], float],
         mpi_spawn_lock: Lock
