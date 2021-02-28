@@ -45,6 +45,8 @@ def smilei_sim(
     info = MPI.Info.Create()
     info.Set("wdir", work_dir)
 
+    error_codes = []
+
     # spawn smilei child process
     with mpi_spawn_lock:
         logger.debug(f"Starting Smilei simulation with parameters: {', '.join([str(x) for x in par_vec])}")
@@ -57,10 +59,15 @@ def smilei_sim(
                 namelist
             ],
             maxprocs=1,
-            info=info
+            info=info,
+            errcodes=error_codes
         )
 
-        logger.debug("Process spawned, waiting for completion")
+        # Only spawning one process so only care about error_codes[0]
+        if (error_code := error_codes[0]) == 0:
+            logger.debug("Process spawned, waiting for completion")
+        else:
+            logger.error(f"An error occurred spawning an MPI process, code: {error_code}")
 
     # wait for smilei to finish (yielding to other threads)
     req = inter.Ibarrier()
