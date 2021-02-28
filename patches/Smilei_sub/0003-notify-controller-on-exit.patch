@@ -1,30 +1,33 @@
-From 0f07dadba882760201e44de0d63bd440c987f8c2 Mon Sep 17 00:00:00 2001
-From: Samuel Kirby <sk5112@ic.ac.uk>
-Date: Fri, 26 Feb 2021 02:04:38 +0000
+From 2c04535aaaa135562a83bf9f27e4971d7a4b0c66 Mon Sep 17 00:00:00 2001
+From: Sam Kirby <sam.kirby94@hotmail.co.uk>
+Date: Sun, 28 Feb 2021 11:18:15 +0000
 Subject: [PATCH 3/3] notify controller on exit
 
 ---
- src/SmileiMPI/SmileiMPI.cpp | 7 +++++++
- 1 file changed, 7 insertions(+)
+ src/SmileiMPI/SmileiMPI.cpp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/src/SmileiMPI/SmileiMPI.cpp b/src/SmileiMPI/SmileiMPI.cpp
-index 430af1a..60a6311 100755
+index 430af1a..b9755b0 100755
 --- a/src/SmileiMPI/SmileiMPI.cpp
 +++ b/src/SmileiMPI/SmileiMPI.cpp
-@@ -75,6 +75,13 @@ SmileiMPI::~SmileiMPI()
+@@ -75,6 +75,16 @@ SmileiMPI::~SmileiMPI()
  {
      delete[]periods_;
  
 +    MPI_Comm controller;
 +    MPI_Comm_get_parent(&controller);
++
 +    if (controller != MPI_COMM_NULL) {
-+        int8_t buf = 0;
-+        MPI_Send(&buf, 1, MPI_INT8_T, 0, 0, controller);
++        MPI_Request req;
++        MPI_Ibarrier(controller, &req);
++        MPI_Wait(&req, MPI_STATUS_IGNORE);
++        MPI_Comm_disconnect(&controller);
 +    }
 +
      MPI_Finalize();
  
  } // END SmileiMPI::~SmileiMPI
 -- 
-1.8.3.1
+2.30.1
 

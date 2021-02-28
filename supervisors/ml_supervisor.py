@@ -63,10 +63,11 @@ def smilei_sim(
         logger.debug("Process spawned, waiting for completion")
 
     # wait for smilei to finish (yielding to other threads)
-    req = inter.irecv(source=0, tag=0)
+    req = inter.Ibarrier()
     while not req.Test():
         time.sleep(5)
-    req.Wait()  # this allows the child process to finish (actually do the send)
+
+    inter.Disconnect()
 
     # perform post-processing
     result = post_process(work_dir)
