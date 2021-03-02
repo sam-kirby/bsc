@@ -140,9 +140,6 @@ def get_gen_number() -> int:
         )
     )[-1]
 
-def load_pop_from_file(path: str) -> np.ndarray:
-    return np.delete(np.loadtxt(path, delimiter=','), -1, axis=1)
-
 # setup logging - split logs into two files
 #  - main.log: Generation change and results only
 #  - debug.log: Every smilei sim start + finish + everything in debug.log. Noisy.
@@ -178,7 +175,6 @@ args = [f"{os.environ['HOME']}/namelists/density_ml.py", max_energy_negated, mpi
 max_iter = 100
 pop_size = 12  # MULTIPLIER! len(x) * pop_size = actual_pop_size
 workers = ThreadPool(processes=usize - 1).map
-init = load_pop_from_file(f"{os.environ['EPHEMERAL']}/density_ml/3157302/gen013.csv")
 
 # Create gen 0 out file
 Path("gen000.csv").touch()  # Note that gen000 will be twice as large as all other gen files
@@ -195,7 +191,6 @@ res = differential_evolution(
     maxiter=max_iter,
     popsize=pop_size,
     workers=workers,
-    init=init,
     updating='deferred',
     polish=False
 )
