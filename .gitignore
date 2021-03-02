@@ -11,3 +11,4 @@
 
 /jobs/**/out
 /**/.vscode
+/**/__pycache__

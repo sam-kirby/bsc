@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #PBS -lwalltime=72:00:00
-#PBS -lselect=8:ncpus=32:mem=16gb:mpiprocs=8:ompthreads=4
+#PBS -lselect=8:ncpus=32:mem=62gb:mpiprocs=8:ompthreads=4
 
 set -e
 
@@ -31,4 +31,13 @@ echo "FOLDERS CREATED"
 lscpu > cpu.txt
 
 echo "INVOKING JOB"
-mpirun -n 1 python $HOME/supervisors/ml_supervisor.py
+
+mpirun -n 1 python $HOME/supervisors/ml_supervisor/main.py \
+    --bound 0 3 \
+    --dims 10 \
+    --maxiter 100 \
+    --popsize 12 \
+    --maxenergy \
+    --athreads 4 \
+    --usize 64 \
+    $HOME/namelists/${JOB_NAME}.py
