@@ -167,6 +167,9 @@ else:
     logger.error(f"Supervisor expected to be running at rank 0, but is actually rank {rank}")
     sys.exit(1)
 
+comm.Set_errhandler(MPI.ERRORS_ARE_FATAL)
+MPI.COMM_SELF.Set_errhandler(MPI.ERRORS_ARE_FATAL)
+
 mpi_spawn_lock = Lock()
 
 # GE Params
