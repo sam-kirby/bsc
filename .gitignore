@@ -5,6 +5,7 @@
 
 !/envs
 !/jobs
+!/mpi_2048_bug
 !/namelists
 !/patches
 !/supervisors
