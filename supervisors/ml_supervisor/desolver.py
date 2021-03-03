@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import pickle
 
-from scipy.optimize._differentialevolution import DifferentialEvolutionSolver
+from scipy.optimize._differentialevolution import DifferentialEvolutionSolver, _MACHEPS
 from scipy._lib._util import MapWrapper
 from multiprocessing.pool import ThreadPool
 
@@ -74,7 +74,7 @@ class DESolver(DifferentialEvolutionSolver):
 
         logger.info(f"Initial population complete, current best density profile is:")
         logger.info([str(x) for x in self.x])
-        logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.convergence}")
+        logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
 
     def optimise(self):
         logger = logging.getLogger("supervisor")
@@ -97,7 +97,7 @@ class DESolver(DifferentialEvolutionSolver):
 
             logger.info(f"Generation {i} complete, current best density profile is:")
             logger.info([str(x) for x in self.x])
-            logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.convergence}")
+            logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
         else:
             iter_exhausted = True
 
