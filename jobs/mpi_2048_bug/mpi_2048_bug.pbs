@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#PBS -lwalltime=00:15:00
+#PBS -lselect=1:ncpus=2:mem=8gb:mpiprocs=2
+
+set -e
+
+module load intel-suite
+module load mpi
+module load hdf5/1.10.5-parallel
+module load anaconda3/personal
+
+# setup
+cd $HOME/mpi_2048_bug
+
+mpirun -n 1 ./2048
