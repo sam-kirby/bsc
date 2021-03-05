@@ -47,6 +47,10 @@ class SmileiWrapper:
         # create temporary work directory - have to do it this way as directory can fail to delete on HPC...
         work_dir = tempfile.mkdtemp(dir=os.getcwd())
 
+        # Create parameter file
+        with open(f"{work_dir}/par_vec.npy", "wb") as par_vec_file:
+            np.save(par_vec_file, par_vec, allow_pickle=False)
+
         # set working directory for child process
         info = MPI.Info.Create()
         info.Set("wdir", work_dir)
@@ -58,8 +62,6 @@ class SmileiWrapper:
             inter = MPI.COMM_SELF.Spawn(
                 command = "smilei_sub",
                 args=[
-                    "from numpy import array",
-                    "x = {}".format(par_vec.__repr__().replace("\n", "")),
                     bytes(self.namelist.resolve())
                 ],
                 maxprocs=1,
