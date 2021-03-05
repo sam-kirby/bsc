@@ -51,8 +51,6 @@ class SmileiWrapper:
         info = MPI.Info.Create()
         info.Set("wdir", work_dir)
 
-        error_codes = []
-
         # spawn smilei child process
         with self.mpi_spawn_lock:
             logger.debug(f"Starting Smilei simulation with parameters: {', '.join([str(x) for x in par_vec])}")
@@ -65,15 +63,10 @@ class SmileiWrapper:
                     bytes(self.namelist.resolve())
                 ],
                 maxprocs=1,
-                info=info,
-                errcodes=error_codes
+                info=info
             )
 
-        # Only spawning one process so only care about error_codes[0]
-        if (error_code := error_codes[0]) == 0:
             logger.debug("Process spawned, waiting for completion")
-        else:
-            logger.error(f"An error occurred spawning an MPI process, code: {error_code}")
 
         # wait for smilei to finish (yielding to other threads)
         req = inter.Ibarrier()
