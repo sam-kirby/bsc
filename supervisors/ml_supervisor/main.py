@@ -8,7 +8,7 @@ from mpi4py import MPI
 import utils
 
 from desolver import DESolver
-from goal_functions import max_energy_negated
+from goal_functions import max_energy_negated, screen_dep_energy_negated
 from smilei_wrapper import SmileiWrapper
 
 # setup logging - split logs into two files
@@ -53,6 +53,12 @@ parser.add_argument(
     "--maxenergy",
     action="store_const",
     const=max_energy_negated,
+    dest="goal_func"
+)
+parser.add_argument(
+    "--depenergy",
+    action="store_const",
+    const=screen_dep_energy_negated,
     dest="goal_func"
 )
 parser.add_argument(

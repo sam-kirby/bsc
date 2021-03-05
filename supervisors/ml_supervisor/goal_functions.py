@@ -17,3 +17,12 @@ def max_energy_negated(work_dir: str) -> float:
     if last_occupied_energy_bin == len(final_energy_spectrum.getData()[0]) - 1:
         logger.warning("Final energy bin not empty, data loss may have occurred")
     return -final_energy_spectrum._centers[0][last_occupied_energy_bin]
+
+def screen_dep_energy_negated(work_dir: str) -> float:
+    """
+    Find the energy deposited on screen 0 and return * -1
+    """
+    logger = logging.getLogger("supervisor")
+    sim_results = happi.Open(work_dir)
+    logger.debug(f"simulation results opened in {work_dir}")
+    return -sim_results.Screen(0).getData()[-1]
