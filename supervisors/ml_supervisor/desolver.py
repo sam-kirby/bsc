@@ -4,7 +4,7 @@ import pickle
 
 from scipy.optimize._differentialevolution import DifferentialEvolutionSolver, _MACHEPS
 from scipy._lib._util import MapWrapper
-from multiprocessing.pool import ThreadPool
+from concurrent.futures import ThreadPoolExecutor
 
 class DESolver(DifferentialEvolutionSolver):
     def __init__(self,
@@ -25,7 +25,7 @@ class DESolver(DifferentialEvolutionSolver):
         self.smilei_wrapper = smilei_wrapper
         self.threads = threads
 
-        workers = ThreadPool(processes=threads).map
+        workers = ThreadPoolExecutor(max_workers=threads).map
 
         super().__init__(
             smilei_wrapper.run_sim,
@@ -121,5 +121,5 @@ class DESolver(DifferentialEvolutionSolver):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._mapwrapper = MapWrapper(ThreadPool(processes=self.threads).map)
+        self._mapwrapper = MapWrapper(ThreadPoolExecutor(max_workers=self.threads).map)
         self.func = self.smilei_wrapper.run_sim
