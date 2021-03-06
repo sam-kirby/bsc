@@ -73,7 +73,7 @@ class SmileiWrapper:
         # wait for smilei to finish (yielding to other threads)
         req = inter.Ibarrier()
         while not req.Test():
-            time.sleep(5)
+            time.sleep(0.01)
 
         inter.Disconnect()
 
@@ -81,7 +81,7 @@ class SmileiWrapper:
         with self.analysis_semaphore:
             result = self.post_process(work_dir)
 
-        logger.debug(f"Smilei Simulation finished, got result: {result}, parameters: {', '.join([str(x) for x in par_vec])}")
+        logger.debug(f"Smilei Simulation finished, got result: {-result}, parameters: {', '.join([str(x) for x in par_vec])}")
 
         # write processed result to current gen file
         with open(
