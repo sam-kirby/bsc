@@ -19,11 +19,11 @@ laser_t0 = fwhm / sqrt(log(2)) # time when peak of laser enters box
 n_0 = 2. # relative to n_crit
 lambda_p = sqrt(n_0)
 cell_length = [0.05 * lambda_p] # calculate plasma wavelength and resolve much smaller (lambda_p / 50)
-number_of_patches = [256]
+number_of_patches = [32]
 particles_per_cell = 64
 thickness_si = 5.e-6 # m
 thickness = thickness_si * omega_si / c
-number_of_cells = [ceil((8 * thickness / cell_length[0]) / 256) * 256]
+number_of_cells = [ceil((8 * thickness / cell_length[0]) / number_of_patches[0]) * number_of_patches[0]]
 boundary_conditions = [["remove", "remove"]]
 
 # Simulation properties
@@ -53,7 +53,12 @@ Main(
     time_fields_frozen = 0.,
     reference_angular_frequency_SI = omega_si, # Probably not necessary as we're not doing anything with collisions/ionisation
     random_seed = 0,
-    print_every = int(number_of_timesteps/10)
+    print_every = number_of_timesteps / 10
+)
+
+LoadBalancing(
+    initial_balance = True,
+    every = number_of_timesteps / 100
 )
 
 LaserPlanar1D(
