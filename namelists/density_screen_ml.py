@@ -33,11 +33,12 @@ timestep = 0.99 * cfl_condition
 number_of_timesteps = int(ceil((simulation_time_si * omega_si) / timestep))
 diag_every = number_of_timesteps
 
-try:
+density_map = np.array([])
+
+def preprocess():
     with open("par_vec.npy", 'rb') as d_map_file:
+        global density_map
         density_map = np.load(d_map_file, allow_pickle=False)
-except FileNotFoundError:
-    density_map = [0.]
 
 Main(
     geometry = "1Dcartesian",
