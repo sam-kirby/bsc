@@ -50,6 +50,45 @@ parser.add_argument(
     help="A population multiplier, len(bounds) * popsize = number of simulations per generation"
 )
 parser.add_argument(
+    "--best1bin",
+    action="store_const",
+    const="best1bin",
+    dest="strategy",
+    help="Sets the algorithm strategy to best1bin - population members are produced by mutating the best of the previous generation using 1 difference vectors with binomial crossover"
+)
+parser.add_argument(
+    "--best2bin",
+    action="store_const",
+    const="best2bin",
+    dest="strategy",
+    help="Sets the algorithm strategy to best2bin - population members are produced by mutating the best of the previous generation using 2 difference vectors with binomial crossover"
+)
+parser.add_argument(
+    "--rand1bin",
+    action="store_const",
+    const="rand1bin",
+    dest="strategy",
+    help="Sets the algorithm strategy to rand1bin - population members are produced by mutating a random member of the previous generation using 1 difference vectors with binomial crossover"
+)
+parser.add_argument(
+    "--mutation",
+    default=1.,  # Note that SciPy's default is (0.5, 1.)
+    type=float,
+    help="The mutation constant or differential weight"
+)
+parser.add_argument(
+    "--dither",
+    type=float,
+    default=None,
+    help="If set, enables dithering between the value of the mutation parameter and this value"
+)
+parser.add_argument(
+    "--crossover",
+    type=float,
+    default=0.7,
+    help="The crossover probability, increasing this value increases the number of mutants that progress into the next generation"
+)
+parser.add_argument(
     "--maxenergy",
     action="store_const",
     const=max_energy_negated,
@@ -89,6 +128,17 @@ else:
     logger.error("Invalid bounds - must specify either a single bound or N bounds")
     sys.exit(1)
 
+# parse strategy
+if (strategy := args.strategy) is None:
+    strategy = "best1bin"
+    logger.info(f"No strategy specified, using '{strategy}'")
+
+# parse mutation
+if args.dither is None:
+    mutation = args.mutation
+else:
+    mutation = (args.mutation, args.dither)
+
 # check a goal function has been set
 if (goal_func := args.goal_func) is None:
     logger.warning("No goal function was set, using default")
@@ -120,7 +170,10 @@ solver = DESolver(
     bounds,
     threads=usize - 1,
     maxiter=args.maxiter,
-    popsize=args.popsize
+    popsize=args.popsize,
+    strategy=strategy,
+    mutation=mutation,
+    recombination=args.crossover
 )
 
 solver.prepare()

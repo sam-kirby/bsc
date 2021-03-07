@@ -13,15 +13,15 @@ class DESolver(DifferentialEvolutionSolver):
         smilei_wrapper,
         bounds,
         threads,
-        strategy='best1bin',
-        maxiter=1000,
-        popsize=15,
+        strategy,
+        maxiter,
+        popsize,
+        mutation,
+        recombination,
         tol=0.01,
-        mutation=(0.5, 1),
-        recombination=0.7,
-        seed=None,
-        init='latinhypercube',
         atol=0,
+        init='latinhypercube',
+        seed=None,
         constraints=()
     ):
         self.smilei_wrapper = smilei_wrapper
