@@ -10,6 +10,7 @@ import time
 from collections.abc import Callable
 from mpi4py import MPI
 
+from utils import pp_array
 
 class SmileiWrapper:
     def __init__(
@@ -57,7 +58,7 @@ class SmileiWrapper:
 
         # spawn smilei child process
         with self.mpi_spawn_lock:
-            logger.debug(f"Starting Smilei simulation with parameters: {', '.join([str(x) for x in par_vec])}")
+            logger.debug(f"Starting Smilei simulation with parameters: {pp_array(par_vec)}")
 
             inter = MPI.COMM_SELF.Spawn(
                 command = "smilei_sub",
@@ -81,7 +82,7 @@ class SmileiWrapper:
         with self.analysis_semaphore:
             result = self.post_process(work_dir)
 
-        logger.debug(f"Smilei Simulation finished, got result: {-result}, parameters: {', '.join([str(x) for x in par_vec])}")
+        logger.debug(f"Smilei Simulation finished, got result: {-result:.3e}, parameters: {pp_array(par_vec)}")
 
         # write processed result to current gen file
         with open(

@@ -6,6 +6,8 @@ from scipy.optimize._differentialevolution import DifferentialEvolutionSolver, _
 from scipy._lib._util import MapWrapper
 from concurrent.futures import ThreadPoolExecutor
 
+from utils import pp_array
+
 class DESolver(DifferentialEvolutionSolver):
     def __init__(self,
         smilei_wrapper,
@@ -72,8 +74,8 @@ class DESolver(DifferentialEvolutionSolver):
         with open(f"solverinit.pickle", "wb") as pickle_file:
             pickle.dump(self, pickle_file)
 
-        logger.info(f"Initial population complete, current best density profile is:")
-        logger.info([str(x) for x in self.x])
+        logger.info(f"Initial population complete")
+        logger.info(pp_array(self.x))
         logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
 
     def optimise(self):
@@ -95,16 +97,18 @@ class DESolver(DifferentialEvolutionSolver):
             if self.converged():
                 break
 
-            logger.info(f"Generation {i} complete, current best density profile is:")
-            logger.info([str(x) for x in self.x])
-            logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
+            logger.info("=============================================")
+            logger.info(f"            Generation {i} complete")
+            logger.info(pp_array(self.x))
+            logger.info(f"Energy is {-self.population_energies[0]:.3e}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
+            logger.info("=============================================")
         else:
             iter_exhausted = True
 
         logger.info("=============================================")
-        logger.info("             Optimisation Result             ")
-        logger.info([str(x) for x in self.x])
-        logger.info(-self.population_energies[0])
+        logger.info("             Optimisation Result")
+        logger.info([pp_array(self.x)])
+        logger.info(f"{-self.population_energies[0]:.3e}")
         logger.info("=============================================")
 
         if iter_exhausted:

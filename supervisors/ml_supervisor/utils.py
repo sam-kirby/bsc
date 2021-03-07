@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import sys
 
 def init_logger() -> logging.Logger:
@@ -22,3 +23,6 @@ def init_logger() -> logging.Logger:
     logger.addHandler(dh)
 
     return logger
+
+def pp_array(array: np.ndarray) -> str:
+    return str([f"{x:.3f}" for x in array])
