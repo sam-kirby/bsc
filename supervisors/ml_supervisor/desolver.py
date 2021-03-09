@@ -76,7 +76,7 @@ class DESolver(DifferentialEvolutionSolver):
 
         logger.info(f"Initial population complete")
         logger.info(pp_array(self.x))
-        logger.info(f"Energy is {-self.population_energies[0]}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
+        logger.info(f"Energy is {-self.population_energies[0]:.3e}, convergence is: {self.tol / (self.convergence + _MACHEPS):.3e}")
 
     def optimise(self):
         logger = logging.getLogger("supervisor")
@@ -100,7 +100,7 @@ class DESolver(DifferentialEvolutionSolver):
             logger.info("=============================================")
             logger.info(f"            Generation {i} complete")
             logger.info(pp_array(self.x))
-            logger.info(f"Energy is {-self.population_energies[0]:.3e}, convergence is: {self.tol / (self.convergence + _MACHEPS)}")
+            logger.info(f"Energy is {-self.population_energies[0]:.3e}, convergence is: {self.tol / (self.convergence + _MACHEPS):.3e}")
             logger.info("=============================================")
         else:
             iter_exhausted = True
