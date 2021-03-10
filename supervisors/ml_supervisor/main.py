@@ -8,7 +8,7 @@ from mpi4py import MPI
 import utils
 
 from desolver import DESolver
-from goal_functions import max_energy_negated, screen_dep_energy_negated
+from goal_functions import max_energy_negated, screen_dep_energy_negated, load_result_from_file
 from smilei_wrapper import SmileiWrapper
 
 # setup logging - split logs into two files
@@ -112,6 +112,11 @@ parser.add_argument(
     help="The number of threads that can perform analysis at a time"
 )
 parser.add_argument(
+    "--maxsims",
+    type=int,
+    help="The maximum number of simulations to run before terminating. The optimisation is resumable if this limit is exhausted; a further `maxsims` simulations will be run"
+)
+parser.add_argument(
     "namelist",
     type=pathlib.Path,
     help="A path to a valid Smilei namelist"
@@ -141,8 +146,8 @@ else:
 
 # check a goal function has been set
 if (goal_func := args.goal_func) is None:
-    logger.warning("No goal function was set, using default")
-    goal_func = max_energy_negated
+    logger.warning("No goal function was set, assuming analysis will be performed by Smilei")
+    goal_func = load_result_from_file
 
 # MPI Setup
 comm = MPI.COMM_WORLD
@@ -173,7 +178,8 @@ solver = DESolver(
     popsize=args.popsize,
     strategy=strategy,
     mutation=mutation,
-    recombination=args.crossover
+    recombination=args.crossover,
+    max_sims=args.maxsims
 )
 
 solver.prepare()

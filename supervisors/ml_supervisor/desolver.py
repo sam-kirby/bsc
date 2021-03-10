@@ -18,6 +18,7 @@ class DESolver(DifferentialEvolutionSolver):
         popsize,
         mutation,
         recombination,
+        max_sims,
         tol=0.01,
         atol=0,
         init='latinhypercube',
@@ -26,6 +27,7 @@ class DESolver(DifferentialEvolutionSolver):
     ):
         self.smilei_wrapper = smilei_wrapper
         self.threads = threads
+        self.max_sims = max_sims
 
         workers = ThreadPoolExecutor(max_workers=threads).map
 
@@ -84,11 +86,17 @@ class DESolver(DifferentialEvolutionSolver):
         # Optimise
         logger.info("Beginning optimisation")
 
-        iter_exhausted = False
+        gens_exhausted = False
+        sims_exhausted = False
+        sims_run = 0
         for i in range(0 if (gen := self.smilei_wrapper.generation) is None else gen + 1, self.maxiter):
             self.smilei_wrapper.generation = i
 
-            next(self)
+            if self.max_sims is None or (sims_run := sims_run + self.num_population_members) < self.max_sims:
+                next(self)
+            else:
+                sims_exhausted = True
+                break
 
             # checkpoint
             with open(f"solver{i:0>3d}.pickle", "wb") as pickle_file:
@@ -103,7 +111,7 @@ class DESolver(DifferentialEvolutionSolver):
             logger.info(f"Energy is {-self.population_energies[0]:.3e}, convergence is: {self.tol / (self.convergence + _MACHEPS):.3e}")
             logger.info("=============================================")
         else:
-            iter_exhausted = True
+            gens_exhausted = True
 
         logger.info("=============================================")
         logger.info("             Optimisation Result")
@@ -111,10 +119,12 @@ class DESolver(DifferentialEvolutionSolver):
         logger.info(f"{-self.population_energies[0]:.3e}")
         logger.info("=============================================")
 
-        if iter_exhausted:
-            logger.info("Solver exhausted the iteration limit")
+        if gens_exhausted:
+            logger.info(f"Generation limit exhausted after {i} generations")
+        elif sims_exhausted:
+            logger.info(f"Simulation limit exhausted after {i} generations")
         else:
-            logger.info(f"Solver converged after {i} iterations!")
+            logger.info(f"Optimisation converged after {i} generations!")
 
 
     def __getstate__(self):

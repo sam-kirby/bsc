@@ -1,6 +1,8 @@
 import happi
 import logging
 import numpy as np
+import pickle
+import time
 
 def max_energy_negated(work_dir: str) -> float:
     """
@@ -26,3 +28,11 @@ def screen_dep_energy_negated(work_dir: str) -> float:
     sim_results = happi.Open(work_dir)
     logger.debug(f"simulation results opened in {work_dir}")
     return -sim_results.Screen(0).getData()[-1]
+
+def load_result_from_file(work_dir: str) -> float:
+    """
+    Load a pickled result from the work dir - useful if analysis done by smilei
+    """
+    time.sleep(0.1)  # This wait is necessary to give Smilei time to shutdown
+    with open(f"{work_dir}/result", "rb") as result_file:
+        return pickle.load(result_file)

@@ -15,12 +15,7 @@ logger = utils.init_logger()
 
 parser = argparse.ArgumentParser(description="Optimise the parameters of a PIC simulation using Differential Evolution")
 parser.add_argument(
-    "--usize",
-    type=int,
-    help="The size of the MPI universe if it cannot be determined automatically"
-)
-parser.add_argument(
-    "pickled_solver",
+    "--solver",
     type=pathlib.Path,
     help="Path to the pickled solver to resume from"
 )
@@ -33,7 +28,6 @@ rank = comm.Get_rank()
 
 if (usize := comm.Get_attr(MPI.UNIVERSE_SIZE)) is None:
     logger.warning("Unable to determine universe size automatically, make sure this has been set correctly")
-    usize = args.usize
 
 if rank == 0:
     logger.info(f"Supervisor is running at rank {rank}. The universe contains {usize} nodes.")
@@ -44,7 +38,25 @@ else:
 comm.Set_errhandler(MPI.ERRORS_ARE_FATAL)
 MPI.COMM_SELF.Set_errhandler(MPI.ERRORS_ARE_FATAL)
 
-with open(args.pickled_solver, 'rb') as pickle_file:
+if (solver_file := args.solver) is None:
+    solver_file = sorted(
+        map(
+            lambda f: f.name,
+            filter(
+                lambda f: f.is_file() and "solver" in f.name and "init" not in f.name,
+                os.scandir()
+            )
+        ),
+        reverse=True
+    )[0]
+
+start_gen = int(solver_file[6:9]) + 1
+
+if f"gen{start_gen:0>3d}.csv" in os.listdir():
+    logger.error("Expected to resume at start of generation")
+    sys.exit(1)
+
+with open(solver_file, 'rb') as pickle_file:
     solver = pickle.load(pickle_file)
 
 solver.optimise()
