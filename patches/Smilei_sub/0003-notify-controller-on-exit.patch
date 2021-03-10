@@ -1,14 +1,14 @@
-From 2c04535aaaa135562a83bf9f27e4971d7a4b0c66 Mon Sep 17 00:00:00 2001
+From f72dfc9a19924940411663636373941fb33098fb Mon Sep 17 00:00:00 2001
 From: Sam Kirby <sam.kirby94@hotmail.co.uk>
 Date: Sun, 28 Feb 2021 11:18:15 +0000
-Subject: [PATCH 3/3] notify controller on exit
+Subject: [PATCH 3/4] notify controller on exit
 
 ---
  src/SmileiMPI/SmileiMPI.cpp | 10 ++++++++++
  1 file changed, 10 insertions(+)
 
 diff --git a/src/SmileiMPI/SmileiMPI.cpp b/src/SmileiMPI/SmileiMPI.cpp
-index 430af1a..b9755b0 100755
+index 430af1ae5..b9755b0fc 100755
 --- a/src/SmileiMPI/SmileiMPI.cpp
 +++ b/src/SmileiMPI/SmileiMPI.cpp
 @@ -75,6 +75,16 @@ SmileiMPI::~SmileiMPI()

@@ -1,0 +1,80 @@
+From a38bcd0c691aa8ba03fed7672c5853df495252ca Mon Sep 17 00:00:00 2001
+From: Sam Kirby <sam.kirby94@hotmail.co.uk>
+Date: Wed, 10 Mar 2021 17:00:35 +0000
+Subject: [PATCH 4/4] add support for user defined analysis function
+
+---
+ src/Params/Params.cpp   | 12 ++++++++++++
+ src/Params/Params.h     |  3 +++
+ src/Python/pycontrol.py |  3 +++
+ src/Smilei.cpp          |  3 +++
+ 4 files changed, 21 insertions(+)
+
+diff --git a/src/Params/Params.cpp b/src/Params/Params.cpp
+index fed2899d9..ae56d1732 100755
+--- a/src/Params/Params.cpp
++++ b/src/Params/Params.cpp
+@@ -1321,6 +1321,18 @@ void Params::cleanup( SmileiMPI *smpi )
+ }
+ 
+ 
++//! Run python analysis function (user defined) if pressent
++void Params::analysis( SmileiMPI *smpi )
++{
++    MESSAGE( 1, "Checking for analysis() function:");
++    if( smpi->isMaster() && Py_IsInitialized() ) {
++        PyTools::runPyFunction( "analysis" );
++        PyErr_Clear();
++    }
++    smpi->barrier();
++}
++
++
+ void Params::uncoupled_decomposition()
+ {
+     n_space_region.resize(3,1);
+diff --git a/src/Params/Params.h b/src/Params/Params.h
+index 9a386c05b..fd2efe9c9 100755
+--- a/src/Params/Params.h
++++ b/src/Params/Params.h
+@@ -312,6 +312,9 @@ public:
+     //! by calling the _keep_python_running python function (part of pycontrol.pyh)
+     void cleanup( SmileiMPI * );
+ 
++    //! call the python analysis function
++    void analysis( SmileiMPI * );
++
+     //! Method to find the numbers of requested species, sorted, and duplicates removed
+     static std::vector<unsigned int> FindSpecies( std::vector<Species *> &, std::vector<std::string> );
+ 
+diff --git a/src/Python/pycontrol.py b/src/Python/pycontrol.py
+index ef4ae8aa1..c67871453 100755
+--- a/src/Python/pycontrol.py
++++ b/src/Python/pycontrol.py
+@@ -113,6 +113,9 @@ def _smilei_check():
+ # this function will be called after initialising the simulation, just before entering the time loop
+ # if it returns false, the code will call a Py_Finalize();
+ def _keep_python_running():
++    # Check for a python analysis function
++    if "analysis" in globals():
++        return True
+     # Verify all temporal profiles, and all profiles that depend on the moving window or on the load balancing
+     profiles = []
+     for las in Laser:
+diff --git a/src/Smilei.cpp b/src/Smilei.cpp
+index 5148a6234..ab813fdad 100755
+--- a/src/Smilei.cpp
++++ b/src/Smilei.cpp
+@@ -632,6 +632,9 @@ int main( int argc, char *argv[] )
+     vecPatches.close( &smpi );
+     smpi.barrier(); // Don't know why but sync needed by HDF5 Phasespace managment
+     delete simWindow;
++
++    TITLE( "Analysis" );
++    params.analysis( &smpi );
+     PyTools::closePython();
+     TITLE( "END" );
+ 
+-- 
+2.30.1
+
