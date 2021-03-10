@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#PBS -lwalltime=24:00:00
+#PBS -lselect=1:ncpus=48:mem=62gb:mpiprocs=24:ompthreads=2
+#PBS -q pqplasma2
+
+# Start this job with `qsub -W depend=afterok:{PREVIOUS JOB ID}`
+
+set -e
+
+JOB_NAME=density_ml_best1bin_150
+
+module load gcc/10.2.0
+module load mpi
+module load hdf5/1.10.5-parallel
+module load anaconda3/personal
+
+echo "MODULES LOADED"
+
+source ~/.bashrc
+
+conda activate smilei
+
+echo "SMILEI ACTIVATED"
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/anaconda3/lib
+
+cd $EPHEMERAL/$JOB_NAME
+
+mpirun -n 1 python $HOME/supervisors/ml_supervisor/resume.py
