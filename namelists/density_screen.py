@@ -16,9 +16,9 @@ fwhm = fwhm_si * omega_si
 laser_t0 = fwhm / sqrt(log(2)) # time when peak of laser enters box
 
 # Plasma properties
-n_0 = 5. # relative to n_crit
+n_0 = 2. # relative to n_crit
 lambda_p = sqrt(n_0)
-cell_length = [0.02 * lambda_p] # calculate plasma wavelength and resolve much smaller (lambda_p / 50)
+cell_length = [0.01 * lambda_p] # calculate plasma wavelength and resolve much smaller (lambda_p / 100)
 number_of_patches = [256]
 particles_per_cell = 100
 thickness_si = 5.e-6 # m
