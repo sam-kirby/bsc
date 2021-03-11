@@ -88,8 +88,8 @@ class DESolver(DifferentialEvolutionSolver):
 
         gens_exhausted = False
         sims_exhausted = False
-        sims_run = 0
-        for i in range(0 if (gen := self.smilei_wrapper.generation) is None else gen + 1, self.maxiter):
+        (start_gen, sims_run) = (0, self.num_population_members) if (gen := self.smilei_wrapper.generation) is None else (gen + 1, 0)
+        for i in range(start_gen, self.maxiter):
             self.smilei_wrapper.generation = i
 
             if self.max_sims is None or (sims_run := sims_run + self.num_population_members) < self.max_sims:
