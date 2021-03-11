@@ -82,13 +82,16 @@ class DESolver(DifferentialEvolutionSolver):
 
     def optimise(self):
         logger = logging.getLogger("supervisor")
-        
-        # Optimise
-        logger.info("Beginning optimisation")
 
         gens_exhausted = False
         sims_exhausted = False
         (start_gen, sims_run) = (0, self.num_population_members) if (gen := self.smilei_wrapper.generation) is None else (gen + 1, 0)
+
+        if start_gen == 0:
+            logger.info("Beginning optimisation")
+        else:
+            logger.info(f"Resuming optimisation at generation {start_gen}")
+
         for i in range(start_gen, self.maxiter):
             self.smilei_wrapper.generation = i
 

@@ -27,10 +27,10 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
 if (usize := comm.Get_attr(MPI.UNIVERSE_SIZE)) is None:
-    logger.warning("Unable to determine universe size automatically, make sure this has been set correctly")
+    logger.warning("Unable to determine universe size automatically, if this doesn't match the original simulation you'll have problems")
 
 if rank == 0:
-    logger.info(f"Supervisor is running at rank {rank}. The universe contains {usize} nodes.")
+    logger.info(f"Supervisor is running at rank {rank}. The universe contains {usize if usize else 'an unknown number of'} nodes.")
 else:
     logger.error(f"Supervisor expected to be running at rank 0, but is actually rank {rank}")
     sys.exit(1)
