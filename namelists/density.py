@@ -1,7 +1,7 @@
 import numpy as np
 
 from numpy import ceil, floor, log, sqrt
-from scipy.constants import c, m_e, pi
+from scipy.constants import c, e, m_e, pi
 
 # Laser properties
 wavelength_si = 800.e-9 # m
@@ -18,18 +18,19 @@ laser_t0 = fwhm / sqrt(log(2)) # time when peak of laser enters box
 # Plasma properties
 n_0 = 2. # relative to n_crit
 lambda_p = sqrt(n_0)
-cell_length = [0.01 * lambda_p] # calculate plasma wavelength and resolve much smaller (lambda_p / 100)
+cell_length = [0.05 * lambda_p] # calculate plasma wavelength and resolve much smaller (lambda_p / 100)
 number_of_patches = [256]
-particles_per_cell = 100
+particles_per_cell = 64
 thickness_si = 5.e-6 # m
 thickness = thickness_si * omega_si / c
 number_of_cells = [ceil((8 * thickness / cell_length[0]) / number_of_patches[0]) * number_of_patches[0]]
 boundary_conditions = [["remove", "remove"]]
 
-energy_max_p_mev = 8 # MeV
-energy_max_p_si = energy_max_p_mev * 1.602e-13
-momentum_max_p_si = sqrt(energy_max_p_si / (1836. * m_e)) * 1836. * m_e 
-momentum_max_p = momentum_max_p_si / (m_e * c)
+energy_max_mev = 30e6 # eV
+energy_max_si = energy_max_mev * e
+energy_max = energy_max_si / (m_e * c**2)
+momentum_max_si = sqrt(2 * 1836. * m_e * energy_max_si)
+momentum_max = momentum_max_si / (m_e * c)
 
 # Simulation properties
 simulation_time_si = 1e-12 # s
@@ -127,7 +128,7 @@ DiagParticleBinning(
     species = ["protons"],
     axes = [
         ["x", 0, number_of_cells[0] * cell_length[0], number_of_cells[0]],
-        ["px", -momentum_max_p, momentum_max_p, 100, "edge_inclusive"]
+        ["px", -momentum_max, momentum_max, 1000, "edge_inclusive"]
     ]
 )
 
@@ -136,6 +137,6 @@ DiagParticleBinning(
     deposited_quantity = "weight",
     species = ["protons"],
     axes = [
-        ["ekin", 0.02, 24, 200, "edge_inclusive"]
+        ["ekin", 0.02, energy_max, 200, "edge_inclusive"]
     ]
 )
