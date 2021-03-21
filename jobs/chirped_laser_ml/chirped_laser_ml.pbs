@@ -39,7 +39,7 @@ if [ ! -f "flag" ]; then
         --bound='-3e-41,3e-41' \
         --bound='-1e-55,1e-55' \
         --bound='0.1,10' \
-        --bound='5e-7,15e-5' \
+        --bound='5e-7,1.5e-5' \
         --dims 5 \
         --maxiter 200 \
         --popsize 15 \

@@ -25,4 +25,4 @@ def init_logger() -> logging.Logger:
     return logger
 
 def pp_array(array: np.ndarray) -> str:
-    return str([f"{x:.3f}" for x in array])
+    return str([f"{x:.3e}" for x in array])
