@@ -2,7 +2,7 @@
 
 #PBS -N CLML_B1B_75
 #PBS -lwalltime=24:00:00
-#PBS -lselect=3:ncpus=36:mem=64gb:mpiprocs=9:ompthreads=4
+#PBS -lselect=3:ncpus=48:mem=64gb:mpiprocs=6:ompthreads=8
 #PBS -q pqplasma2
 
 set -e
@@ -48,7 +48,7 @@ if [ ! -f "flag" ]; then
         --dither 1.0 \
         --maxsims 2048 \
         --athreads 4 \
-        --usize 27 \
+        --usize 18 \
         $HOME/namelists/chirped_laser_a_ml.py
 else
     mpirun -n 1 python $HOME/supervisors/ml_supervisor/resume.py
