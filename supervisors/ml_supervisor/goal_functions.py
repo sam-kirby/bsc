@@ -33,6 +33,6 @@ def load_result_from_file(work_dir: str) -> float:
     """
     Load a pickled result from the work dir - useful if analysis done by smilei
     """
-    time.sleep(0.1)  # This wait is necessary to give Smilei time to shutdown
+    time.sleep(1)  # This wait is necessary to give Smilei time to shutdown
     with open(f"{work_dir}/result", "rb") as result_file:
         return pickle.load(result_file)
