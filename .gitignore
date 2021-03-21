@@ -3,6 +3,7 @@
 !/.gitignore
 !/readme.md
 
+!/custom_lasers
 !/envs
 !/jobs
 !/mpi_2048_bug
