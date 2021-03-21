@@ -50,11 +50,11 @@ if (solver_file := args.solver) is None:
         reverse=True
     )[0]
 
-start_gen = int(solver_file[6:9]) + 1
+    start_gen = int(solver_file[6:9]) + 1
 
-if f"gen{start_gen:0>3d}.csv" in os.listdir():
-    logger.error("Expected to resume at start of generation")
-    sys.exit(1)
+    if f"gen{start_gen:0>3d}.csv" in os.listdir():
+        logger.error("Expected to resume at start of generation")
+        sys.exit(1)
 
 with open(solver_file, 'rb') as pickle_file:
     solver = pickle.load(pickle_file)

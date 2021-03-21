@@ -71,6 +71,13 @@ parser.add_argument(
     help="Sets the algorithm strategy to rand1bin - population members are produced by mutating a random member of the previous generation using 1 difference vectors with binomial crossover"
 )
 parser.add_argument(
+    "--currenttobest1bin",
+    action="store_const",
+    const="currenttobest1bin",
+    dest="strategy",
+    help="Sets the algorithm strategy to currenttobest1bin - population members are produced by mutating the current member of the previous generation using 2 difference vectors (one being the difference between the current and the best) with binomial crossover"
+)
+parser.add_argument(
     "--mutation",
     default=1.,  # Note that SciPy's default is (0.5, 1.)
     type=float,

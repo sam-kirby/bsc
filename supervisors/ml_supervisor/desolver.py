@@ -118,7 +118,7 @@ class DESolver(DifferentialEvolutionSolver):
 
         logger.info("=============================================")
         logger.info("             Optimisation Result")
-        logger.info([pp_array(self.x)])
+        logger.info(pp_array(self.x))
         logger.info(f"{-self.population_energies[0]:.3e}")
         logger.info("=============================================")
 
