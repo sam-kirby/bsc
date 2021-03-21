@@ -22,8 +22,8 @@ parser.add_argument(
     "-b",
     "--bound",
     action="append",
-    nargs=2,
-    type=float,
+    nargs=1,
+    type=str,
     required=True,
     help="You must specify at least one bound. Specifying only one bound assumes all dims have the same bound",
     dest="bounds"
@@ -133,9 +133,9 @@ args = parser.parse_args()
 
 # parse bounds
 if (supplied_bounds := len(args.bounds)) == 1:
-    bounds = [(l, u) for [l, u] in args.bounds * args.dims]
+    bounds = [(float(l), float(u)) for [l, u] in map(lambda b: b[0].split(","), args.bounds * args.dims)]
 elif supplied_bounds == args.dims:
-    bounds = [(l, u) for [l, u] in args.bounds]
+    bounds = [(float(l), float(u)) for [l, u] in map(lambda b: b[0].split(","), args.bounds)]
 else:
     logger.error("Invalid bounds - must specify either a single bound or N bounds")
     sys.exit(1)

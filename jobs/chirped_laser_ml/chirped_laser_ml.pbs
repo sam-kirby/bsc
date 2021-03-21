@@ -35,11 +35,11 @@ echo "INVOKING JOB"
 if [ ! -f "flag" ]; then
     touch flag
     mpirun -n 1 python $HOME/supervisors/ml_supervisor/main.py \
-        --bound -3e-27 3e-27 \
-        --bound -3e-41 3e-41 \
-        --bound -1e-55 1e-55 \
-        --bound 0.1 10 \
-        --bound 5e-7 15e-5 \
+        --bound='-3e-27,3e-27' \
+        --bound='-3e-41,3e-41' \
+        --bound='-1e-55,1e-55' \
+        --bound='0.1,10' \
+        --bound='5e-7,15e-5' \
         --dims 5 \
         --maxiter 200 \
         --popsize 15 \

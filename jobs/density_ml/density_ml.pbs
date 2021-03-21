@@ -34,7 +34,7 @@ lscpu > cpu.txt
 echo "INVOKING JOB"
 
 mpirun -n 1 python $HOME/supervisors/ml_supervisor/main.py \
-    --bound 0 10 \
+    --bound='0,10' \
     --dims 10 \
     --maxiter 200 \
     --popsize 15 \
