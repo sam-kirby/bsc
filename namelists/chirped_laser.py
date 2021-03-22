@@ -1,5 +1,3 @@
-import tempfile
-
 from custom_lasers import ChirpedLaser
 from scipy.constants import c, e, m_e, pi
 
@@ -11,11 +9,12 @@ focal_spot_si = 3.e-6 # m
 
 # Plasma properties
 energy_max_mev = 30e6 # eV
+energy_bins = 50000
 n_0 = 2 # Used to compute simulation resolution, no species will have this density
 
 # Simulation Properties
 box_front_si = 15e-6
-box_back_si = 15e-6
+box_back_si = 10e-6
 particles_per_cell = 64
 boundary_conditions = [["remove", "remove"]]
 simulation_time_si = 1e-12 # s
@@ -63,7 +62,7 @@ Main(
     time_fields_frozen = 0.,
     reference_angular_frequency_SI = omega_si,
     random_seed = 0,
-    print_every = number_of_timesteps / 10
+    print_every = int(number_of_timesteps / 10)
 )
 
 LoadBalancing(
@@ -133,7 +132,7 @@ DiagScreen(
     deposited_quantity = "weight",
     species = ["protons"],
     axes = [
-        ["ekin", 0., energy_max, 5000]
+        ["ekin", 0., energy_max, energy_bins]
     ],
     every = number_of_timesteps
 )
