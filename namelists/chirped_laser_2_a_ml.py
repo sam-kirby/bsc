@@ -1,3 +1,5 @@
+import numpy as np
+
 from custom_lasers import ChirpedLaser
 from scipy.constants import c, e, m_e, pi
 
@@ -10,7 +12,9 @@ focal_spot_si = 3.e-6 # m
 # Plasma properties
 energy_max_mev = 30e6 # eV
 energy_bins = 50000
-n_0 = 2 # Used to compute simulation resolution, no species will have this density
+peak_density = 3
+thickness_si = 5.e-6
+scale_length_si = 3.e-6
 
 # Simulation Properties
 box_front_si = 15e-6
@@ -20,23 +24,26 @@ boundary_conditions = [["remove", "remove"]]
 simulation_time_si = 1e-12 # s
 number_of_patches = [32]
 
+with open("par_vec.npy", "rb") as f:
+    parameter_vec = np.load(f, allow_pickle=False)
+
 # Computed Laser Properties
 omega_si = 2 * pi * c / wavelength_si # rad s^(-1)
 intensity_si = energy_si / (fwhm_si * pi * focal_spot_si**2)
-beta = [0., 0., 0., 0., 0.]
 a_0 = 0.85 * np.sqrt(intensity_si / 1.e22 * (wavelength_si / 1.e-6)**2)
+beta = [0., 0.]
+beta.extend(parameter_vec[0:3])
 tau_si = fwhm_si / (2 * np.sqrt(np.log(2)))
 laser = ChirpedLaser(omega_si, tau_si, a_0, beta)
 
 # Computed Plasma Properties
-density = 2.
-thickness_si = 5.e-6
 thickness = thickness_si * omega_si / c
+scale_length = scale_length_si * omega_si / c
 energy_max_si = energy_max_mev * e
 energy_max = energy_max_si / (m_e * c**2)
 momentum_max_si = np.sqrt(2 * 1836. * m_e * energy_max_si)
 momentum_max = momentum_max_si / (m_e * c)
-lambda_p = np.sqrt(n_0)
+lambda_p = np.sqrt(peak_density)
 
 # Computed Simulation Properties
 cell_length = [0.05 * lambda_p] # calculate plasma wavelength and resolve much smaller (lambda_p / 20)
@@ -48,11 +55,22 @@ timestep = 0.99 * cell_length[0]
 number_of_timesteps = int(np.ceil(((simulation_time_si + laser.get_peak_offset()) * omega_si) / timestep))
 diag_every = int(10.e-15 * omega_si / timestep)
 
+def preprocess():
+    import os
+    import tempfile
+    global results_dir
+    results_dir = os.getcwd()
+    work_dir = tempfile.mkdtemp(dir=os.environ["TMPDIR"])
+    os.chdir(work_dir)
+
 def analysis():
+    import os
+    import pickle
+    import shutil
     from h5py import File # use h5py to avoid reimporting the namelist and regenerating laser
 
-    f = File("Screen0.h5")
-    data = np.array(f[f"timestep{number_of_timesteps:0>8d}"])
+    with File("Screen0.h5") as f:
+        data = np.array(f[f"timestep{number_of_timesteps - 1:0>8d}"])
 
     try:
         index = np.nonzero(data)[0][-1]
@@ -61,7 +79,10 @@ def analysis():
     
     result = index / energy_bins * energy_max_mev
 
-    print(result)
+    with open(f"{results_dir}/result", "wb") as f:
+        pickle.dump(-result, f)
+
+    shutil.rmtree(os.getcwd())
 
 Main(
     geometry = "1Dcartesian",
@@ -90,7 +111,13 @@ Laser(
     space_time_profile = [ lambda t: 0., lambda t: laser.at_sim_time(t) ]
 )
 
-number_density = trapezoidal(density, xvacuum=box_front, xplateau=thickness)
+def number_density(x):
+    if x < box_front:
+        return peak_density * np.exp((x - box_front) / scale_length)
+    elif x < box_front + thickness:
+        return peak_density
+    else:
+        return 0
 
 Species(
     name = "electrons",
@@ -116,29 +143,6 @@ Species(
     boundary_conditions = boundary_conditions
 )
 
-DiagScalar(every=diag_every)
-
-DiagFields(every=diag_every)
-
-DiagParticleBinning(
-    every = diag_every,
-    deposited_quantity = "weight",
-    species = ["protons"],
-    axes = [
-        ["x", 0, number_of_cells[0] * cell_length[0], number_of_cells[0]],
-        ["px", -momentum_max, momentum_max, 1000, "edge_inclusive"]
-    ]
-)
-
-DiagParticleBinning(
-    every = diag_every,
-    deposited_quantity = "weight",
-    species = ["protons"],
-    axes = [
-        ["ekin", 0.02, energy_max, 200, "edge_inclusive"]
-    ]
-)
-
 DiagScreen(
     shape = "plane",
     point = [screen_position],
@@ -149,5 +153,5 @@ DiagScreen(
     axes = [
         ["ekin", 0., energy_max, energy_bins]
     ],
-    every = number_of_timesteps
+    every = number_of_timesteps - 1
 )

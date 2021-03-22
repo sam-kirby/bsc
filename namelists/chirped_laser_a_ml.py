@@ -68,8 +68,8 @@ def analysis():
     import shutil
     from h5py import File # use h5py to avoid reimporting the namelist and regenerating laser
 
-    f = File("Screen0.h5")
-    data = np.array(f.get(f"timestep{number_of_timesteps:0>8d}"))
+    with File("Screen0.h5") as f:
+        data = np.array(f[f"timestep{number_of_timesteps - 1:0>8d}"])
 
     try:
         index = np.nonzero(data)[0][-1]
@@ -146,5 +146,5 @@ DiagScreen(
     axes = [
         ["ekin", 0., energy_max, energy_bins]
     ],
-    every = number_of_timesteps
+    every = number_of_timesteps - 1
 )
