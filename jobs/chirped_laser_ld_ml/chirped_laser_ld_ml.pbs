@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#PBS -N CLETML_B1B_75
+#PBS -N CLLDML_B1B_45
 #PBS -lwalltime=24:00:00
 #PBS -lselect=3:ncpus=48:mem=64gb:mpiprocs=6:ompthreads=8
 #PBS -q pqplasma2
