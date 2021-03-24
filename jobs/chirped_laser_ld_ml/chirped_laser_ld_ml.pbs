@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#PBS -N CLETML_B1B_75
+#PBS -lwalltime=24:00:00
+#PBS -lselect=3:ncpus=48:mem=64gb:mpiprocs=6:ompthreads=8
+#PBS -q pqplasma2
+
+set -e
+
+module load gcc/10.2.0
+module load mpi
+module load hdf5/1.10.5-parallel
+module load anaconda3/personal
+
+echo "MODULES LOADED"
+
+source ~/.bashrc
+
+conda activate smilei
+
+echo "SMILEI ACTIVATED"
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/anaconda3/lib
+
+OUTDIR=$EPHEMERAL/$PBS_JOBNAME
+mkdir -p $OUTDIR
+cd $OUTDIR
+
+echo "FOLDERS CREATED"
+
+lscpu > cpu.txt
+
+echo "INVOKING JOB"
+
+if [ ! -f "flag" ]; then
+    touch flag
+    mpirun -n 1 python $HOME/supervisors/ml_supervisor/main.py \
+        --bound='-3e-27,3e-27' \
+        --bound='-3e-41,3e-41' \
+        --bound='-1e-55,1e-55' \
+        --dims 3 \
+        --maxiter 500 \
+        --popsize 15 \
+        --best1bin \
+        --mutation 0.5 \
+        --dither 1.0 \
+        --maxsims 2048 \
+        --athreads 8 \
+        --usize 18 \
+        $HOME/namelists/chirped_laser_3_a_ml.py
+else
+    mpirun -n 1 python $HOME/supervisors/ml_supervisor/resume.py
+fi
