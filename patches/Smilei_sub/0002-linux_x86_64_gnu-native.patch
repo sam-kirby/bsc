@@ -1,4 +1,4 @@
-From 0b611566b4bd7b0fd484c68ac09057e2d5e72c33 Mon Sep 17 00:00:00 2001
+From f5a888c48ee3dbfa8148e90095f0aa1e990b67ca Mon Sep 17 00:00:00 2001
 From: Samuel Kirby <sk5112@ic.ac.uk>
 Date: Fri, 26 Feb 2021 02:04:36 +0000
 Subject: [PATCH 2/4] linux_x86_64_gnu native
@@ -18,5 +18,5 @@ index 0de07db4c..9d3c340a7 100644
  # -mavx2
  # -mfma
 -- 
-2.30.1
+2.32.0
 
