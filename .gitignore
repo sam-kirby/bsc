@@ -3,6 +3,7 @@
 !/.gitignore
 !/readme.md
 
+!/analysis
 !/custom_lasers
 !/envs
 !/jobs
